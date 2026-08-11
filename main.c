@@ -1,3 +1,5 @@
+#include <string.h>
+
 int main(int argc, char** argv){
   // Load config files, if any.
 
@@ -37,6 +39,7 @@ void seaSh_loop(void){
 // RL stands for read line.
 // It means that the buffer size for reading a line of input is 1024 bytes.
 // Buffer = staging area/ container for temporary storage.
+
 #define SEASH_RL_BUFSIZE_1024 
 char* seaSh_read_line(void){
   int bufsize = SEASH_RL_BUFSIZE;
@@ -75,4 +78,46 @@ char* seaSh_read_line(void){
   }
 
   // Alternate way to implement the above function: getline()
+}
+
+// Simplification: do not allow quoting or backslash escaping in command line arguments.
+// Remove this simplification in the future.
+// Tokenise the string using whitespace as delimiters.
+
+#define SEASH_TOK_BUFSIZE 64
+// \r : carriage return - moves the cursor back to the start of the current line.
+// \a : triggers an alert sound/ audible beep on your system speaker.
+#define SEASH_TOK_DELIM " \t\r\n\a" 
+char** seaSh_split_line(char* line){
+  int bufsize = SEASH_TOK_BUFSIZE;
+  int position = 0;
+  char** tokens = malloc(bufsize * sizeof(char*));
+  char* token;
+
+  if(!tokens){
+    fprintf(stderr, "lsh: allocation error\n");
+    exit(EXIT_FAILURE);
+  }
+
+  // strtok: splits a string into smaller pieces called tokens based on specified delimiter characters.
+  // it returns a pointer to the next token found, and NULL when there are no tokens left.
+  token = strtok(line, SEASH_TOK_DELIM); // CHECK: strtok
+  while (token != NULL){
+    tokens[position] = token;
+    position++;
+
+    if (position >= bufsize){
+      bufsize += SEASH_TOK_BUFSIZE;
+      tokens = realloc(tokens, bufsize * sizeof(char*));
+      if(!tokens){
+        fprintf(stderr, "lsh: allocation error\n");
+        exit(EXIT_FAILURE);
+      }
+    }
+
+    // for strtok to continue tokenising the same string, pass NULL os the first argument.
+    token = strtok(NULL, SEASH_TOK_DELIM);
+  }
+  tokens[position] = NULL;
+  return tokens;
 }
