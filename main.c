@@ -1,4 +1,5 @@
 #include <string.h>
+#include <sys/wait.h>
 
 int main(int argc, char** argv){
   // Load config files, if any.
@@ -120,4 +121,47 @@ char** seaSh_split_line(char* line){
   }
   tokens[position] = NULL;
   return tokens;
+}
+
+int seaSh_launch(char** args){
+  pid_t pid;
+  pid_t wpid;
+  int status;
+
+  pid = fork(); // fork returns 0 to the child process and the pid of the child process to the parent process
+  
+  if(pid == 0){
+    // child process
+    // execvp - expects a program name and an array of string arguments (also called vector - hence the 'v' in execvp)
+    // p - instead of providing the full file path of the program to run, we're going to give its name, and let the OS search for the program in the path.
+    // if the exec command returns -1 (or actually, if it returns at all) -> error.
+    if(execvp(args[0], args) == -1){
+      perror("seaSh");
+    }
+    exit(EXIT_FAILURE);
+  } else if (pid < 0){
+    // error forking
+    perror("seaSh");
+  } else{
+    // parent process
+    do {
+      // waitpid - suspends the execution of the calling process until a specific child process changes its state (eg: terminates, stops or resumes)
+      // the basic wait() function pauses for any child process.
+      // pid: specifies which child process to wait for.
+      // > 0: waits for the specific child process whose PID matches this value.
+      // -1: waits for any child process (behaves exactly like wait())
+      // 0: waits for any child process in the same process group as the parent.
+      // < -1: waits for any child process in the process group whose id is the absolute value of pid.
+      // status: pointer to an integer where the system stores the child's exit status information.
+      // WUNTRACED: returns if a child process has been stopped by a signal.
+      wpid = waitpid(pid, &status, WUNTRACED);
+    } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+
+    // Status evaluation macros:
+    // WIFEXITED(status) - evaluates to true if the child process terminated normally
+    // WIFSIGNALED(status) - evaluates to true if the child process was terminated by an unhandled signal
+  }
+
+  return 1; // returning 1 acts as a signal to the calling function that we should prompt for input again.
+  
 }
