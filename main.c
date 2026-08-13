@@ -1,6 +1,8 @@
-#include <string.h>
-#include <sys/wait.h>
-#include <unistd.h>
+#include <string.h> // strcmp(), strtok()
+#include <sys/wait.h> // waitpid() and associated macros
+#include <unistd.h> // chdir(), fork(), exec(), pid_t
+#include <stdlib.h> // malloc(), realloc(), free(), exit(), execvp(), EXIT_SUCCESS, EXIT_FAILURE
+#include <stdio.h> // fprintf(), printf(), stderr, getchar(), perror()
 
 int main(int argc, char** argv){
   // Load config files, if any.
@@ -217,4 +219,21 @@ int seaSh_help(char** args){
 // exit on a child process would exit the child process's environment, not the parent's.
 int lsh_exit(char** args){
   return 0;
+}
+
+int seaSh_execute(char** args){
+  int i;
+
+  if (args[0] == NULL){
+    // An empty command was entered.
+    return 1;
+  }
+
+  for (i = 0; i < seaSh_num_builtins; i++){
+    if (strcmp(args[0], builtin_str[i]) == 0){
+      return (*builtin_func[i])(args);
+    }
+  }
+
+  return seaSh_launch(args);
 }
