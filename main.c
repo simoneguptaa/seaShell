@@ -4,6 +4,8 @@
 #include <stdlib.h> // malloc(), realloc(), free(), exit(), execvp(), EXIT_SUCCESS, EXIT_FAILURE
 #include <stdio.h> // fprintf(), printf(), stderr, getchar(), perror()
 
+void seaSh_loop(void);
+
 int main(int argc, char** argv){
   // Load config files, if any.
 
@@ -18,6 +20,10 @@ int main(int argc, char** argv){
 // A void argument inside the parentheses means that the function explicitly takes no arguments.
 // Accidental passing of argument(s) throws a compiler error.
 // In versions of C >= 23, specifying void inside () is redundant, but still allowed.
+
+char* seaSh_read_line(void);
+char** seaSh_split_line(char*);
+int seaSh_execute(char**);
 
 void seaSh_loop(void){ 
   char *line;
@@ -44,7 +50,7 @@ void seaSh_loop(void){
 // It means that the buffer size for reading a line of input is 1024 bytes.
 // Buffer = staging area/ container for temporary storage.
 
-#define SEASH_RL_BUFSIZE_1024 
+#define SEASH_RL_BUFSIZE 1024 
 char* seaSh_read_line(void){
   int bufsize = SEASH_RL_BUFSIZE;
   int position = 0;
@@ -181,7 +187,7 @@ char* builtin_str[] = {"cd", "help", "exit"};
 int (*builtin_func[]) (char**) = {&seaSh_cd, &seaSh_help, &seaSh_exit};
 
 int seaSh_num_builtins(){
-  return sizeof(builtin_str.length) / sizeof(builtin_str[0]);
+  return sizeof(builtin_str) / sizeof(builtin_str[0]);
 }
 
 // why a built in cd command is needed:
@@ -207,7 +213,7 @@ int seaSh_help(char** args){
   printf("type program names and arguments, and hit enter");
   printf("the following commands are built in:\n");
 
-  for (int i = 0; i < seaSh_num_builtins; i++){
+  for (int i = 0; i < seaSh_num_builtins(); i++){
     printf("  %s\n", builtin_str[i]);
   }
 
@@ -217,7 +223,7 @@ int seaSh_help(char** args){
 
 // why a built in exit is needed
 // exit on a child process would exit the child process's environment, not the parent's.
-int lsh_exit(char** args){
+int seaSh_exit(char** args){
   return 0;
 }
 
@@ -229,7 +235,7 @@ int seaSh_execute(char** args){
     return 1;
   }
 
-  for (i = 0; i < seaSh_num_builtins; i++){
+  for (i = 0; i < seaSh_num_builtins(); i++){
     if (strcmp(args[0], builtin_str[i]) == 0){
       return (*builtin_func[i])(args);
     }
