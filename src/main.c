@@ -9,6 +9,9 @@
 int main(int argc, char** argv){
   // Load config files, if any.
 
+  (void)argc;
+  (void)argv;
+
   // Run command loop.
   seaSh_loop();
 

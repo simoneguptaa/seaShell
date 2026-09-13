@@ -32,6 +32,8 @@ int seaSh_cd(char** args){
 
 // help is built in because it's shell specific.
 int seaSh_help(char** args){
+  (void)args;
+
   printf("simone's shell: seaShell");
   printf("type program names and arguments, and hit enter");
   printf("the following commands are built in:\n");
@@ -47,5 +49,6 @@ int seaSh_help(char** args){
 // why a built in exit is needed
 // exit on a child process would exit the child process's environment, not the parent's.
 int seaSh_exit(char** args){
+  (void)args;
   return 0;
 }

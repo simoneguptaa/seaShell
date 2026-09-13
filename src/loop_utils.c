@@ -129,6 +129,7 @@ int seaSh_launch(char** args){
       // status: pointer to an integer where the system stores the child's exit status information.
       // WUNTRACED: returns if a child process has been stopped by a signal.
       wpid = waitpid(pid, &status, WUNTRACED);
+      (void)wpid;
     } while (!WIFEXITED(status) && !WIFSIGNALED(status));
 
     // Status evaluation macros:
