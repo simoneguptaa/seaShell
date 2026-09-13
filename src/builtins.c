@@ -1,11 +1,15 @@
+#define _POSIX_C_SOURCE 200112L // when compiling with strict c standards like -std=c99 or -std=c11, 
+// gcc strictly enforces the pure C library. because setenv is a POSIX/Unix extension (not part of the standard C language spec), 
+// <stdlib.h> purposely hides it declaration unless you explicitly tell the compiler that you're writing a POSIX/Unix program
+// defining _POSIX_C_SOURCE unhides setenv inside stdlib.h
 #include "builtins.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 // list of builtin commands, followed by their corresponding function implementations.
 char* builtin_str[] = {"cd", "help", "exit"};
-
 
 // in C, a function name decays to a function pointer, so &seaSh_cd and seaSh_cd are equivalent below.
 int (*builtin_func[]) (char**) = {&seaSh_cd, &seaSh_help, &seaSh_exit};
@@ -20,13 +24,31 @@ int seaSh_num_builtins(){
 // the parent process's cwd would be unchanged.
 // every subsequent command, like ls, would inherit the parent's cwd.
 int seaSh_cd(char** args){
+  char* target_dir;
+
   if(args[1] == NULL){
-    fprintf(stderr, "seaSh: expected argument to be \"cd\"\n");
+    // if no argument was provided, default to the HOME environment variable
+    target_dir = getenv("HOME");
+
+    if(target_dir == NULL){
+      fprintf(stderr, "$HOME not set");
+    }
+
   } else {
-    if (chdir(args[1]) != 0){ // chdir changes the current working directory of the calling process. on success, returns 0. on failure returns -1 and sets errno.
-      perror("seaSh");
+    target_dir = args[1];
+  }
+
+  if (chdir(target_dir) != 0){ // chdir changes the current working directory of the calling process. on success, returns 0. on failure returns -1 and sets errno.
+    perror("seaSh");
+  }
+  else{
+    // update the PWD environment variable to reflect the change
+    int result = setenv("PWD", target_dir, 1);
+    if(result != 0){
+      perror("error updating PWD env variable\n");
     }
   }
+
   return 1;
 }
 
